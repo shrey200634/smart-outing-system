@@ -26,6 +26,9 @@ public class Outing {
 
     private String wardernComment ; // if reject why ?
 
+    private String aiFlag;
+    private int urgencyScore;
+
     // QR code (only generate after approval
     @Column(length=1000)
     private String qrCodeUrl;
@@ -34,4 +37,6 @@ public class Outing {
     public void setWardenComment(String wardenComment) {
         this.wardernComment=wardenComment;
     }
+
+
 }

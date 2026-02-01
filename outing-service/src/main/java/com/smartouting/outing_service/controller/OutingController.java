@@ -1,7 +1,9 @@
 package com.smartouting.outing_service.controller;
 
-import com.smartouting.outing_service.model.Outing;
+import com.smartouting.outing_service.dto.OutingRequestDTO;
+import com.smartouting.outing_service.dto.OutingResponseDTO;
 import com.smartouting.outing_service.service.OutingService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,25 +12,23 @@ import org.springframework.web.bind.annotation.*;
 public class OutingController {
 
     @Autowired
-    private OutingService outingService;
+    private OutingService service;
 
-    // student apply
+    // 1. Apply (DTO version)
     @PostMapping("/apply")
-    public Outing apply(@RequestBody Outing outing){
-        return  outingService.applyForOuting(outing);
-
+    public OutingResponseDTO apply(@RequestBody @Valid OutingRequestDTO request) {
+        return service.applyForOuting(request);
     }
 
-    // wardern Approwal
+    // 2. Approve
     @PutMapping("/approve/{id}")
-    public Outing approve (@PathVariable Long id, @RequestParam String comment )throws Exception{
-        return outingService.approveOuting(id ,comment);
+    public OutingResponseDTO approve(@PathVariable Long id, @RequestParam String comment) throws Exception {
+        return service.approveOuting(id, comment);
     }
 
-    //for security
+    // 3. Scan
     @PutMapping("/scan/{id}")
-    public Outing scanQR(@PathVariable Long id ){
-        return outingService.verifyAndMarkOut(id);
+    public OutingResponseDTO scanQr(@PathVariable Long id) {
+        return service.verifyAndMarkOut(id);
     }
-
 }
