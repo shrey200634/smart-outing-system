@@ -3,9 +3,11 @@ package com.smartouting.outing_service.service;
 import com.smartouting.outing_service.dto.OutingRequestDTO;
 import com.smartouting.outing_service.dto.OutingResponseDTO;
 import com.smartouting.outing_service.exception.ResourseNotFoundException;
+import com.smartouting.outing_service.exception.StudentBannedException;
 import com.smartouting.outing_service.model.Outing;
 import com.smartouting.outing_service.repository.OutingRepository;
 import com.smartouting.outing_service.util.QrCodeUtil;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +27,31 @@ public class OutingService {
     private EmailService emailService;
 
     // 1. APPLY (Student sends RequestDTO, we return ResponseDTO)
+    private static final int MAX_LATE_ALLOWED = 3;
+
+    @Transactional
     public OutingResponseDTO applyForOuting(OutingRequestDTO request) {
+
+        long lateCount =outingRepository.countByStudentIdAndStatus(request.getStudentId() , "OVERDUE");
+
+        // BAN
+        if (lateCount >= MAX_LATE_ALLOWED) {
+            throw new StudentBannedException(
+                    "Access Denied : you have " + lateCount + "overdue Outing . " +
+                            "Please meet the wardern to clear your blacklist ststus . "
+            );
+        }
+
+
+            List<Outing> activeOutings = outingRepository.findByStudentId(request.getStudentId());
+            boolean isAlreadyOut = activeOutings.stream()
+                    .anyMatch(o -> "OUT".equals(o.getStatus()) || "APPROVED".equals(o.getStatus()));
+
+            if (isAlreadyOut) {
+                throw new RuntimeException("You already have an active or approved outing request.");
+            }
+
+
 
         // A. Convert DTO to Entity
         Outing outing = new Outing();
@@ -55,6 +81,10 @@ public class OutingService {
         // E. Convert back to DTO
         return mapToResponse(savedOuting);
     }
+
+
+
+
 
     // 2. APPROVE (Warden)
     public OutingResponseDTO approveOuting(Long id, String comment) throws Exception {

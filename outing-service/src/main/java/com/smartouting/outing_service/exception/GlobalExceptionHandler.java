@@ -42,4 +42,15 @@ public class GlobalExceptionHandler {
         error.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    public ResponseEntity<Map<String, Object>> handleBan(StudentBannedException ex){
+        Map<String ,Object> error =new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status" , HttpStatus.FORBIDDEN.value());
+        error.put("error" , "BLACKLIST_ENFORCED");
+        error.put("message" , ex.getMessage());
+
+        return new ResponseEntity<>(error,HttpStatus.FORBIDDEN);
+
+    }
 }

@@ -17,6 +17,8 @@ public interface OutingRepository extends JpaRepository<Outing, Long> {
 
     List<Outing> findByStatusAndReturnDateBefore(String status, LocalDateTime now);
 
+    long countByStudentIdAndStatus(String studentId , String status );
+
 }
 
 
