@@ -6,15 +6,13 @@ spring:
     name: api-gateway
   cloud:
     gateway:
-      # Global CORS — applies to every route
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins:
-              - "http://localhost:5173"
-              - "http://localhost:3000"
-              - "http://127.0.0.1:5173"
-              - "http://127.0.0.1:3000"
+            # Wildcard — works on ANY localhost port (5173, 5177, any future port)
+            allowedOriginPatterns:
+              - "http://localhost:*"
+              - "http://127.0.0.1:*"
             allowedMethods:
               - GET
               - POST
@@ -23,11 +21,7 @@ spring:
               - OPTIONS
               - PATCH
             allowedHeaders:
-              - Authorization
-              - Content-Type
-              - Accept
-              - Origin
-              - X-Requested-With
+              - "*"
             exposedHeaders:
               - Authorization
             allowCredentials: true
@@ -39,7 +33,6 @@ spring:
           lower-case-service-id: true
 
       routes:
-        # Route 1: Identity Service
         - id: identity-service
           uri: lb://IDENTITY-SERVICE
           predicates:
@@ -47,7 +40,6 @@ spring:
           filters:
             - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
 
-        # Route 2: Outing Service
         - id: outing-service
           uri: lb://OUTING-SERVICE
           predicates:

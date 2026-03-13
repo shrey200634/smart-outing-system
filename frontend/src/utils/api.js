@@ -1,13 +1,7 @@
 // ============================================================
 //  API Utility — Smart Outing System
-//  Uses Vite proxy in dev → no CORS issues!
-//  Proxy: /auth → http://localhost:8989/auth
-//         /outing → http://localhost:8989/outing
+//  Vite proxy forwards /auth and /outing to port 8989
 // ============================================================
-
-// Use relative paths — Vite proxy handles the forwarding to port 8989
-// This completely eliminates CORS issues in development
-const BASE = "";
 
 async function request(url, options = {}) {
   const token = localStorage.getItem("sos_token");
@@ -16,10 +10,10 @@ async function request(url, options = {}) {
 
   let res;
   try {
-    res = await fetch(`${BASE}${url}`, { ...options, headers });
-  } catch (networkErr) {
+    res = await fetch(url, { ...options, headers });
+  } catch {
     throw new Error(
-      "Cannot connect to server. Make sure the backend is running on port 8989 and all microservices are up."
+      "Network error: Cannot reach the server.\n\nMake sure ALL 4 backend services are running:\n1. service-registry  → port 8761\n2. identity-service  → port 8081\n3. outing-service    → port 8082\n4. api-gateway       → port 8989\n\nStart them in that order and wait ~30 seconds before trying again."
     );
   }
 
@@ -29,6 +23,13 @@ async function request(url, options = {}) {
       const text = await res.text();
       if (text) errMsg = text;
     } catch (_) {}
+
+    // 404 from gateway = service not yet registered with Eureka
+    if (res.status === 404) {
+      throw new Error(
+        "404: Service not found.\n\nThis usually means identity-service or outing-service hasn't registered with Eureka yet.\n\n✅ Fix: Wait 15–30 seconds after starting all services, then try again."
+      );
+    }
     throw new Error(errMsg);
   }
 
@@ -37,52 +38,45 @@ async function request(url, options = {}) {
   return res.text();
 }
 
-// ── AUTH ───────────────────────────────────────────────────
+// ── AUTH ────────────────────────────────────────────────────
 export const authAPI = {
-  // POST /auth/register  →  body: { name, email, password, role }
   register: (data) =>
     request("/auth/register", {
       method: "POST",
       body: JSON.stringify(data),
     }),
 
-  // POST /auth/token  →  body: { username, password }
+  // Backend uses name (not email) to look up user: findByName(username)
   login: (username, password) =>
     request("/auth/token", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     }),
 
-  // GET /auth/validate?token=...
-  validate: (token) => request(`/auth/validate?token=${encodeURIComponent(token)}`),
+  validate: (token) =>
+    request(`/auth/validate?token=${encodeURIComponent(token)}`),
 };
 
-// ── OUTING ────────────────────────────────────────────────
+// ── OUTING ──────────────────────────────────────────────────
 export const outingAPI = {
-  // POST /outing/apply
   apply: (data) =>
     request("/outing/apply", {
       method: "POST",
       body: JSON.stringify(data),
     }),
 
-  // PUT /outing/approve/{id}?comment=...
   approve: (id, comment) =>
     request(`/outing/approve/${id}?comment=${encodeURIComponent(comment)}`, {
       method: "PUT",
     }),
 
-  // PUT /outing/scan/{id}
   scan: (id) =>
     request(`/outing/scan/${id}`, { method: "PUT" }),
 
-  // GET /outing/all
   getAll: () => request("/outing/all"),
 
-  // GET /outing/{id}
   getById: (id) => request(`/outing/${id}`),
 
-  // GET /outing/student/{studentId}
   getStudentHistory: (studentId) =>
     request(`/outing/student/${encodeURIComponent(studentId)}`),
 };
