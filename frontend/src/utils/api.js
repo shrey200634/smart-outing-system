@@ -73,6 +73,9 @@ export const outingAPI = {
   scan: (id) =>
     request(`/outing/scan/${id}`, { method: "PUT" }),
 
+  returnIn: (id) =>
+    request(`/outing/return/${id}`, { method: "PUT" }),
+
   getAll: () => request("/outing/all"),
 
   getById: (id) => request(`/outing/${id}`),

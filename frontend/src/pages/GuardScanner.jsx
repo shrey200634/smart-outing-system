@@ -38,7 +38,7 @@ export default function GuardScanner() {
     try {
       const result = await outingAPI.scan(scanResult.data.id);
       toast(`✅ ${result.studentName} marked as OUT. Parent notified.`, "success");
-      setRecentScans((p) => [{ ...result, scannedAt: new Date() }, ...p.slice(0, 9)]);
+      setRecentScans((p) => [{ ...result, scannedAt: new Date(), eventType: "OUT" }, ...p.slice(0, 9)]);
       setScanResult({ type: "success", data: result });
       setOutingId("");
     } catch (err) {
@@ -49,6 +49,22 @@ export default function GuardScanner() {
       } else {
         toast(msg, "error");
       }
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const handleReturn = async () => {
+    if (!scanResult?.data?.id) return;
+    setScanning(true);
+    try {
+      const result = await outingAPI.returnIn(scanResult.data.id);
+      toast(`✅ ${result.studentName} marked as RETURNED. Welcome back!`, "success");
+      setRecentScans((p) => [{ ...result, scannedAt: new Date(), eventType: "IN" }, ...p.slice(0, 9)]);
+      setScanResult({ type: "returned", data: result });
+      setOutingId("");
+    } catch (err) {
+      toast(err.message || "Return scan failed", "error");
     } finally {
       setScanning(false);
     }
@@ -94,7 +110,8 @@ export default function GuardScanner() {
               "Student shows QR code at gate",
               "Enter the outing ID from QR",
               "Preview student details",
-              "Click 'Mark OUT' if APPROVED",
+              "Click 'Mark OUT' if APPROVED (exit)",
+              "Click 'Mark IN' when student returns",
               "Parent email sent automatically",
             ].map((step, i) => (
               <div key={i} style={styles.instructStep}>
@@ -203,13 +220,23 @@ export default function GuardScanner() {
                     </div>
                   )}
 
-                  {scanResult.type !== "success" && scanResult.data.status === "APPROVED" && (
+                  {scanResult.type !== "success" && scanResult.type !== "returned" && scanResult.data.status === "APPROVED" && (
                     <button
                       onClick={handleScan}
                       disabled={scanning}
                       style={{ ...styles.markOutBtn, opacity: scanning ? 0.7 : 1 }}
                     >
                       {scanning ? "Processing..." : "✓ Mark as OUT — Let Student Pass"}
+                    </button>
+                  )}
+
+                  {scanResult.type !== "success" && scanResult.type !== "returned" && (scanResult.data.status === "OUT" || scanResult.data.status === "OVERDUE") && (
+                    <button
+                      onClick={handleReturn}
+                      disabled={scanning}
+                      style={{ ...styles.markInBtn, opacity: scanning ? 0.7 : 1 }}
+                    >
+                      {scanning ? "Processing..." : "↩ Mark as IN — Student Returned"}
                     </button>
                   )}
 
@@ -220,11 +247,18 @@ export default function GuardScanner() {
                     </div>
                   )}
 
-                  {scanResult.data.status !== "APPROVED" && scanResult.type !== "success" && (
+                  {scanResult.type === "returned" && (
+                    <div style={styles.returnedBanner}>
+                      <span style={{ fontSize: 20 }}>🏠</span>
+                      <span style={{ color: "#818cf8", fontWeight: 700 }}>Student marked RETURNED. Welcome back!</span>
+                    </div>
+                  )}
+
+                  {scanResult.data.status !== "APPROVED" && scanResult.data.status !== "OUT" && scanResult.data.status !== "OVERDUE" && scanResult.type !== "success" && scanResult.type !== "returned" && (
                     <div style={styles.warningBanner}>
                       <span style={{ fontSize: 20 }}>⚠️</span>
                       <span style={{ color: "#fbbf24", fontWeight: 600 }}>
-                        Status is <strong>{scanResult.data.status}</strong> — Cannot allow exit. Only APPROVED students may leave.
+                        Status is <strong>{scanResult.data.status}</strong> — Cannot process. Only APPROVED students may exit; OUT/OVERDUE students may return.
                       </span>
                     </div>
                   )}
@@ -241,11 +275,11 @@ export default function GuardScanner() {
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {recentScans.map((s, i) => (
                 <div key={i} style={styles.recentItem}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", flexShrink: 0 }} />
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: s.eventType === "IN" ? "#818cf8" : "#10b981", flexShrink: 0 }} />
                   <span style={{ color: "#f9fafb", fontWeight: 600, fontSize: 13 }}>{s.studentName}</span>
                   <span style={{ color: "#6b7280", fontSize: 12 }}>→ {s.destination}</span>
-                  <span style={{ marginLeft: "auto", color: "#10b981", fontSize: 11 }}>
-                    OUT • {s.scannedAt?.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                  <span style={{ marginLeft: "auto", color: s.eventType === "IN" ? "#818cf8" : "#10b981", fontSize: 11 }}>
+                    {s.eventType === "IN" ? "IN" : "OUT"} • {s.scannedAt?.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
               ))}
@@ -364,10 +398,22 @@ const styles = {
     fontFamily: "'Syne', sans-serif", cursor: "pointer",
     boxShadow: "0 8px 28px rgba(16,185,129,0.35)",
   },
+  markInBtn: {
+    width: "100%", marginTop: 20, padding: "16px 24px",
+    background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+    border: "none", borderRadius: 12, color: "white", fontSize: 15, fontWeight: 700,
+    fontFamily: "'Syne', sans-serif", cursor: "pointer",
+    boxShadow: "0 8px 28px rgba(99,102,241,0.35)",
+  },
   successBanner: {
     marginTop: 16, display: "flex", alignItems: "center", gap: 12,
     padding: "14px 18px", background: "rgba(16,185,129,0.1)",
     border: "1px solid rgba(16,185,129,0.25)", borderRadius: 10,
+  },
+  returnedBanner: {
+    marginTop: 16, display: "flex", alignItems: "center", gap: 12,
+    padding: "14px 18px", background: "rgba(129,140,248,0.1)",
+    border: "1px solid rgba(129,140,248,0.25)", borderRadius: 10,
   },
   warningBanner: {
     marginTop: 16, display: "flex", alignItems: "flex-start", gap: 12,
