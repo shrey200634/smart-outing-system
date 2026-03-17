@@ -88,7 +88,17 @@ public class OutingService {
                 outing.getOutDate(), outing.getReturnDate());
     }
 
-    public List<Outing> getAllOuting() { return outingRepository.findAll(); }
-    public Outing getOutingById(Long id) { return outingRepository.findById(id).orElseThrow(() -> new ResourseNotFoundException("Not found: " + id)); }
-    public List<Outing> getOutingsByStudentId(String studentId) { return outingRepository.findByStudentId(studentId); }
+
+    // help to get the list when wardern want to see the request like pending , return , alln requests ....
+    // used in wardern dashboard
+
+    public List<Outing> getAllOuting() {
+        return outingRepository.findAll();
+    }
+    public Outing getOutingById(Long id) {
+        return outingRepository.findById(id).orElseThrow(() -> new ResourseNotFoundException("Not found: " + id));
+    }
+    public List<Outing> getOutingsByStudentId(String studentId) {
+        return outingRepository.findByStudentId(studentId);
+    }
 }

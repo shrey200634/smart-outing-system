@@ -1,3 +1,4 @@
+
 package com.smartouting.outing_service.util;
 
 import com.google.zxing.BarcodeFormat;
@@ -18,7 +19,6 @@ public class QrCodeUtil {
         MatrixToImageWriter.writeToStream(matrix, "PNG", outputStream);
 
         byte[] imageBytes = outputStream.toByteArray();
-        return Base64.getEncoder().encodeToString(imageBytes);
-
+        return "data:image/png;base64," + Base64.getEncoder().encodeToString(imageBytes);
     }
 }

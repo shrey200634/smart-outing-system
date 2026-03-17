@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { outingAPI } from "../utils/api";
 import { useToast } from "../components/Toast";
@@ -16,17 +16,62 @@ export default function GuardScanner() {
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [recentScans, setRecentScans] = useState([]);
+  const [showScanner, setShowScanner] = useState(false);
 
-  const fetchOuting = async () => {
-    if (!outingId.trim()) return toast("Enter an outing ID", "warn");
+  // QR Scanner initialization
+  useEffect(() => {
+    if (!showScanner) return;
+
+    let html5QrcodeScanner = null;
+
+    const initScanner = async () => {
+      try {
+        const { Html5QrcodeScanner } = await import('html5-qrcode');
+        
+        html5QrcodeScanner = new Html5QrcodeScanner(
+          "qr-reader",
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          false
+        );
+
+        html5QrcodeScanner.render(
+          (decodedText) => {
+            // Extract ID from QR: "ID:42-STATUS:APPROVED-ST12345"
+            const match = decodedText.match(/ID:(\d+)/);
+            if (match) {
+              const id = match[1];
+              setOutingId(id);
+              toast(`✅ Scanned ID: ${id}`, "success");
+              fetchOutingById(id);
+              setShowScanner(false);
+              html5QrcodeScanner?.clear();
+            } else {
+              toast("Invalid QR format", "warn");
+            }
+          },
+          (error) => console.debug("Scan error:", error)
+        );
+      } catch (error) {
+        toast("Camera access denied", "error");
+        setShowScanner(false);
+      }
+    };
+
+    initScanner();
+    return () => html5QrcodeScanner?.clear().catch(() => {});
+  }, [showScanner, toast]);
+
+  const fetchOutingById = async (id) => {
+    const searchId = id || outingId;
+    if (!searchId.trim()) return toast("Enter outing ID", "warn");
+    
     setLoading(true);
     setScanResult(null);
     try {
-      const data = await outingAPI.getById(Number(outingId));
+      const data = await outingAPI.getById(Number(searchId));
       setScanResult({ type: "preview", data });
     } catch (err) {
       toast("Not found: " + err.message, "error");
-      setScanResult(null);
     } finally {
       setLoading(false);
     }
@@ -37,17 +82,14 @@ export default function GuardScanner() {
     setScanning(true);
     try {
       const result = await outingAPI.scan(scanResult.data.id);
-      toast(`✅ ${result.studentName} marked as OUT. Parent notified.`, "success");
-      setRecentScans((p) => [{ ...result, scannedAt: new Date(), eventType: "OUT" }, ...p.slice(0, 9)]);
+      toast(`✅ ${result.studentName} marked OUT`, "success");
+      setRecentScans(p => [{ ...result, scannedAt: new Date(), eventType: "OUT" }, ...p.slice(0, 9)]);
       setScanResult({ type: "success", data: result });
       setOutingId("");
     } catch (err) {
-      const msg = err.message || "Scan failed";
-      if (msg.includes("NOT approved") || msg.includes("not approved")) {
-        toast("❌ Student is NOT approved to leave!", "error");
-        setScanResult((p) => ({ ...p, error: "Student is NOT approved to leave. Warden approval required." }));
-      } else {
-        toast(msg, "error");
+      toast(err.message || "Scan failed", "error");
+      if ((err.message || "").includes("NOT approved")) {
+        setScanResult(p => ({ ...p, error: "NOT approved to leave!" }));
       }
     } finally {
       setScanning(false);
@@ -59,12 +101,12 @@ export default function GuardScanner() {
     setScanning(true);
     try {
       const result = await outingAPI.returnIn(scanResult.data.id);
-      toast(`✅ ${result.studentName} marked as RETURNED. Welcome back!`, "success");
-      setRecentScans((p) => [{ ...result, scannedAt: new Date(), eventType: "IN" }, ...p.slice(0, 9)]);
+      toast(`✅ ${result.studentName} marked RETURNED`, "success");
+      setRecentScans(p => [{ ...result, scannedAt: new Date(), eventType: "IN" }, ...p.slice(0, 9)]);
       setScanResult({ type: "returned", data: result });
       setOutingId("");
     } catch (err) {
-      toast(err.message || "Return scan failed", "error");
+      toast(err.message || "Return failed", "error");
     } finally {
       setScanning(false);
     }
@@ -76,6 +118,22 @@ export default function GuardScanner() {
 
   return (
     <div style={styles.layout}>
+      {/* Scanner Modal */}
+      {showScanner && (
+        <div style={styles.scannerOverlay}>
+          <div style={styles.scannerModal}>
+            <div style={styles.scannerHeader}>
+              <h3 style={{ color: "#f9fafb", fontSize: 18, fontWeight: 700 }}>📷 Scan QR Code</h3>
+              <button onClick={() => setShowScanner(false)} style={styles.closeBtn}>✕</button>
+            </div>
+            <div id="qr-reader" style={{ width: "100%", borderRadius: 12 }}></div>
+            <p style={{ color: "#9ca3af", fontSize: 13, marginTop: 16, textAlign: "center" }}>
+              Point camera at student's QR code
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside style={styles.sidebar}>
         <div>
@@ -103,16 +161,14 @@ export default function GuardScanner() {
             </div>
           </div>
 
-          {/* Instructions */}
           <div style={styles.instructions}>
             <div style={styles.instructTitle}>How to verify</div>
             {[
-              "Student shows QR code at gate",
-              "Enter the outing ID from QR",
-              "Preview student details",
-              "Click 'Mark OUT' if APPROVED (exit)",
-              "Click 'Mark IN' when student returns",
-              "Parent email sent automatically",
+              "Click 'Scan QR' button",
+              "Point camera at QR code",
+              "System extracts ID",
+              "Click 'Mark OUT' to exit",
+              "Click 'Mark IN' when return",
             ].map((step, i) => (
               <div key={i} style={styles.instructStep}>
                 <span style={styles.instructNum}>{i + 1}</span>
@@ -134,36 +190,46 @@ export default function GuardScanner() {
       <main style={styles.main}>
         <div style={styles.pageHeader}>
           <h1 style={styles.pageTitle}>Gate Scanner</h1>
-          <p style={styles.pageSub}>Verify student outing approvals and mark exit</p>
+          <p style={styles.pageSub}>Scan QR or enter ID manually</p>
         </div>
 
-        {/* Scanner card */}
         <div style={styles.scanCard}>
-          {/* Pulse ring decoration */}
           <div style={styles.pulseWrap}>
             <div style={styles.pulseRing1} />
             <div style={styles.pulseRing2} />
             <div style={styles.scanIcon}>🔍</div>
           </div>
 
-          <h2 style={styles.scanTitle}>Enter Outing ID</h2>
-          <p style={styles.scanSub}>Type the ID from the student's QR code</p>
+          <h2 style={styles.scanTitle}>Verify Student</h2>
+          <p style={styles.scanSub}>Scan QR code or enter ID</p>
 
+          {/* SCAN BUTTON */}
+          <button onClick={() => setShowScanner(true)} style={styles.qrScanBtn}>
+            📷 Scan QR Code
+          </button>
+
+          <div style={styles.divider}>
+            <div style={styles.dividerLine} />
+            <span style={styles.dividerText}>OR</span>
+            <div style={styles.dividerLine} />
+          </div>
+
+          {/* MANUAL INPUT */}
           <div style={styles.inputRow}>
             <input
               value={outingId}
               onChange={(e) => setOutingId(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && fetchOuting()}
+              onKeyDown={(e) => e.key === "Enter" && fetchOutingById()}
               placeholder="e.g. 42"
               type="number"
               style={styles.scanInput}
             />
-            <button onClick={fetchOuting} disabled={loading} style={styles.fetchBtn}>
-              {loading ? "..." : "Lookup →"}
+            <button onClick={fetchOutingById} disabled={loading} style={styles.fetchBtn}>
+              {loading ? "..." : "Lookup"}
             </button>
           </div>
 
-          {/* Preview result */}
+          {/* RESULT */}
           {scanResult && (
             <div style={{
               ...styles.resultCard,
@@ -179,17 +245,16 @@ export default function GuardScanner() {
                 <>
                   <div style={styles.resultHeader}>
                     <div>
-                      <div style={{ color: "#f9fafb", fontWeight: 800, fontSize: 16, fontFamily: "'Syne', sans-serif" }}>
+                      <div style={{ color: "#f9fafb", fontSize: 18, fontWeight: 800 }}>
                         {scanResult.data.studentName}
                       </div>
                       <div style={{ color: "#6b7280", fontSize: 12, marginTop: 2 }}>ID: {scanResult.data.studentId}</div>
                     </div>
                     <span style={{
-                      padding: "5px 14px", borderRadius: 99, fontSize: 11, fontWeight: 700,
-                      textTransform: "uppercase", letterSpacing: "0.5px",
-                      background: scanResult.data.status === "APPROVED" ? "rgba(16,185,129,0.15)" : "rgba(251,191,36,0.1)",
-                      color: statusColor[scanResult.data.status] || "#9ca3af",
-                      border: `1px solid ${statusColor[scanResult.data.status] || "#9ca3af"}40`,
+                      padding: "6px 14px", borderRadius: 99, fontSize: 11, fontWeight: 700,
+                      background: `${statusColor[scanResult.data.status]}15`,
+                      color: statusColor[scanResult.data.status],
+                      border: `1.5px solid ${statusColor[scanResult.data.status]}40`,
                     }}>
                       {scanResult.data.status}
                     </span>
@@ -197,70 +262,66 @@ export default function GuardScanner() {
 
                   <div style={styles.resultGrid}>
                     <div style={styles.resultItem}>
-                      <span style={styles.resultLabel}>Destination</span>
-                      <span style={styles.resultValue}>📍 {scanResult.data.destination || "—"}</span>
+                      <div style={styles.resultLabel}>Destination</div>
+                      <div style={styles.resultValue}>{scanResult.data.destination}</div>
                     </div>
                     <div style={styles.resultItem}>
-                      <span style={styles.resultLabel}>Reason</span>
-                      <span style={styles.resultValue}>{scanResult.data.reason || "—"}</span>
+                      <div style={styles.resultLabel}>Reason</div>
+                      <div style={styles.resultValue}>{scanResult.data.reason}</div>
                     </div>
                     <div style={styles.resultItem}>
-                      <span style={styles.resultLabel}>Expected Return</span>
-                      <span style={styles.resultValue}>🔙 {formatDT(scanResult.data.returnDate)}</span>
+                      <div style={styles.resultLabel}>Out Date</div>
+                      <div style={styles.resultValue}>{formatDT(scanResult.data.outDate)}</div>
                     </div>
                     <div style={styles.resultItem}>
-                      <span style={styles.resultLabel}>Warden Comment</span>
-                      <span style={styles.resultValue}>💬 {scanResult.data.wardenComment || "None"}</span>
+                      <div style={styles.resultLabel}>Return Date</div>
+                      <div style={styles.resultValue}>{formatDT(scanResult.data.returnDate)}</div>
                     </div>
                   </div>
 
-                  {scanResult.data.qrCodeUrl && (
-                    <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
-                      <img src={scanResult.data.qrCodeUrl} alt="QR" style={{ width: 140, height: 140, background: "white", padding: 6, borderRadius: 10 }} />
-                    </div>
-                  )}
-
-                  {scanResult.type !== "success" && scanResult.type !== "returned" && scanResult.data.status === "APPROVED" && (
-                    <button
-                      onClick={handleScan}
-                      disabled={scanning}
-                      style={{ ...styles.markOutBtn, opacity: scanning ? 0.7 : 1 }}
-                    >
-                      {scanning ? "Processing..." : "✓ Mark as OUT — Let Student Pass"}
-                    </button>
-                  )}
-
-                  {scanResult.type !== "success" && scanResult.type !== "returned" && (scanResult.data.status === "OUT" || scanResult.data.status === "OVERDUE") && (
-                    <button
-                      onClick={handleReturn}
-                      disabled={scanning}
-                      style={{ ...styles.markInBtn, opacity: scanning ? 0.7 : 1 }}
-                    >
-                      {scanning ? "Processing..." : "↩ Mark as IN — Student Returned"}
-                    </button>
-                  )}
-
                   {scanResult.type === "success" && (
                     <div style={styles.successBanner}>
-                      <span style={{ fontSize: 20 }}>✅</span>
-                      <span style={{ color: "#10b981", fontWeight: 700 }}>Student marked OUT. Parent email sent!</span>
+                      <div style={{ fontSize: 24 }}>✅</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ color: "#10b981", fontWeight: 700, fontSize: 14 }}>Marked OUT</div>
+                        <div style={{ color: "#6b7280", fontSize: 12, marginTop: 2 }}>Parent email sent</div>
+                      </div>
                     </div>
                   )}
 
                   {scanResult.type === "returned" && (
                     <div style={styles.returnedBanner}>
-                      <span style={{ fontSize: 20 }}>🏠</span>
-                      <span style={{ color: "#818cf8", fontWeight: 700 }}>Student marked RETURNED. Welcome back!</span>
+                      <div style={{ fontSize: 24 }}>🏠</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ color: "#818cf8", fontWeight: 700, fontSize: 14 }}>Marked RETURNED</div>
+                        <div style={{ color: "#6b7280", fontSize: 12, marginTop: 2 }}>Student back on campus</div>
+                      </div>
                     </div>
                   )}
 
-                  {scanResult.data.status !== "APPROVED" && scanResult.data.status !== "OUT" && scanResult.data.status !== "OVERDUE" && scanResult.type !== "success" && scanResult.type !== "returned" && (
-                    <div style={styles.warningBanner}>
-                      <span style={{ fontSize: 20 }}>⚠️</span>
-                      <span style={{ color: "#fbbf24", fontWeight: 600 }}>
-                        Status is <strong>{scanResult.data.status}</strong> — Cannot process. Only APPROVED students may exit; OUT/OVERDUE students may return.
-                      </span>
-                    </div>
+                  {scanResult.type === "preview" && (
+                    <>
+                      {scanResult.data.status === "APPROVED" && (
+                        <button onClick={handleScan} disabled={scanning} style={styles.markOutBtn}>
+                          {scanning ? "Processing..." : "✓ Mark OUT (Exit)"}
+                        </button>
+                      )}
+
+                      {(scanResult.data.status === "OUT" || scanResult.data.status === "OVERDUE") && (
+                        <button onClick={handleReturn} disabled={scanning} style={styles.markInBtn}>
+                          {scanning ? "Processing..." : "🏠 Mark IN (Return)"}
+                        </button>
+                      )}
+
+                      {!["APPROVED", "OUT", "OVERDUE"].includes(scanResult.data.status) && (
+                        <div style={styles.warningBanner}>
+                          <div style={{ fontSize: 20 }}>⚠️</div>
+                          <span style={{ fontSize: 13, color: "#f59e0b", flex: 1 }}>
+                            Status: <strong>{scanResult.data.status}</strong> — Cannot process
+                          </span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </>
               )}
@@ -279,7 +340,7 @@ export default function GuardScanner() {
                   <span style={{ color: "#f9fafb", fontWeight: 600, fontSize: 13 }}>{s.studentName}</span>
                   <span style={{ color: "#6b7280", fontSize: 12 }}>→ {s.destination}</span>
                   <span style={{ marginLeft: "auto", color: s.eventType === "IN" ? "#818cf8" : "#10b981", fontSize: 11 }}>
-                    {s.eventType === "IN" ? "IN" : "OUT"} • {s.scannedAt?.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                    {s.eventType} • {s.scannedAt?.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
               ))}
@@ -349,9 +410,7 @@ const styles = {
   scanCard: {
     background: "rgba(10,18,40,0.9)", border: "1px solid rgba(16,185,129,0.15)",
     borderRadius: 24, padding: "48px 40px", textAlign: "center", maxWidth: 600,
-    position: "relative", overflow: "hidden",
-    boxShadow: "0 16px 60px rgba(0,0,0,0.4)",
-    animation: "fadeIn 0.4s ease",
+    position: "relative", overflow: "hidden", boxShadow: "0 16px 60px rgba(0,0,0,0.4)", animation: "fadeIn 0.4s ease",
   },
   pulseWrap: { position: "relative", width: 80, height: 80, margin: "0 auto 24px" },
   pulseRing1: {
@@ -368,6 +427,16 @@ const styles = {
   },
   scanTitle: { fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#f9fafb", marginBottom: 8 },
   scanSub: { color: "#6b7280", fontSize: 14, marginBottom: 28 },
+  qrScanBtn: {
+    width: "100%", maxWidth: 400, margin: "0 auto", padding: "18px 32px",
+    background: "linear-gradient(135deg, #10b981, #059669)",
+    border: "none", borderRadius: 16, color: "white", fontSize: 16, fontWeight: 700,
+    fontFamily: "'Syne', sans-serif", cursor: "pointer",
+    boxShadow: "0 8px 28px rgba(16,185,129,0.4)",
+  },
+  divider: { display: "flex", alignItems: "center", gap: 16, margin: "24px 0" },
+  dividerLine: { flex: 1, height: 1, background: "rgba(255,255,255,0.1)" },
+  dividerText: { color: "#6b7280", fontSize: 12, fontWeight: 600 },
   inputRow: { display: "flex", gap: 12, justifyContent: "center" },
   scanInput: {
     padding: "14px 20px", background: "rgba(255,255,255,0.05)",
@@ -377,10 +446,28 @@ const styles = {
     textAlign: "center", letterSpacing: "2px",
   },
   fetchBtn: {
-    padding: "14px 28px", background: "linear-gradient(135deg, #10b981, #059669)",
+    padding: "14px 28px", background: "linear-gradient(135deg, #6b7280, #4b5563)",
     border: "none", borderRadius: 14, color: "white", fontSize: 15, fontWeight: 700,
     fontFamily: "'Syne', sans-serif", cursor: "pointer",
-    boxShadow: "0 6px 20px rgba(16,185,129,0.3)",
+  },
+  scannerOverlay: {
+    position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    zIndex: 9999, padding: 20,
+  },
+  scannerModal: {
+    background: "rgba(10,18,40,0.98)", border: "1px solid rgba(16,185,129,0.2)",
+    borderRadius: 20, padding: 24, maxWidth: 500, width: "100%",
+    boxShadow: "0 20px 80px rgba(0,0,0,0.6)",
+  },
+  scannerHeader: {
+    display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20,
+  },
+  closeBtn: {
+    width: 32, height: 32, borderRadius: "50%",
+    background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)",
+    color: "#ef4444", fontSize: 18, cursor: "pointer",
+    display: "flex", alignItems: "center", justifyContent: "center",
   },
   resultCard: {
     marginTop: 28, background: "rgba(255,255,255,0.02)", border: "1.5px solid",
@@ -395,15 +482,13 @@ const styles = {
     width: "100%", marginTop: 20, padding: "16px 24px",
     background: "linear-gradient(135deg, #10b981, #059669)",
     border: "none", borderRadius: 12, color: "white", fontSize: 15, fontWeight: 700,
-    fontFamily: "'Syne', sans-serif", cursor: "pointer",
-    boxShadow: "0 8px 28px rgba(16,185,129,0.35)",
+    fontFamily: "'Syne', sans-serif", cursor: "pointer", boxShadow: "0 8px 28px rgba(16,185,129,0.35)",
   },
   markInBtn: {
     width: "100%", marginTop: 20, padding: "16px 24px",
     background: "linear-gradient(135deg, #6366f1, #4f46e5)",
     border: "none", borderRadius: 12, color: "white", fontSize: 15, fontWeight: 700,
-    fontFamily: "'Syne', sans-serif", cursor: "pointer",
-    boxShadow: "0 8px 28px rgba(99,102,241,0.35)",
+    fontFamily: "'Syne', sans-serif", cursor: "pointer", boxShadow: "0 8px 28px rgba(99,102,241,0.35)",
   },
   successBanner: {
     marginTop: 16, display: "flex", alignItems: "center", gap: 12,
