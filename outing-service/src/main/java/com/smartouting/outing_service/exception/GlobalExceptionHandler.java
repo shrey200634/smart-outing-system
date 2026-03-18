@@ -1,7 +1,5 @@
 package com.smartouting.outing_service.exception;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.catalina.startup.UserConfig;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -34,10 +32,6 @@ public class GlobalExceptionHandler {
         error.put("status", HttpStatus.NOT_FOUND.value());
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
-
-
-
-
 
     // 3. Handle Generic Errors
     @ExceptionHandler(Exception.class)

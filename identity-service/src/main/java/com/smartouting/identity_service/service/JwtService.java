@@ -16,12 +16,12 @@ import java.util.function.Function;
 @Component
 public class JwtService {
 
+    // Ideally, move this to application.properties later
     public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
 
-    // ── Generate token WITH role claim ────────────────────────────────────────
-    public String generateToken(String userName, String role) {
+    // 1. GENERATE TOKEN
+    public String generateToken(String userName) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role);
         return createToken(claims, userName);
     }
 
@@ -30,7 +30,7 @@ public class JwtService {
                 .setClaims(claims)
                 .setSubject(userName)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30)) // 30 mins
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
     }
 
@@ -39,17 +39,16 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    // --- NEW METHODS YOU WERE MISSING ---
+
+    // 2. EXTRACT USERNAME (Fixes the first error)
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    // ── Extract role from token ───────────────────────────────────────────────
-    public String extractRole(String token) {
-        return (String) extractAllClaims(token).get("role");
-    }
-
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        return claimsResolver.apply(extractAllClaims(token));
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
     }
 
     private Claims extractAllClaims(String token) {
@@ -60,6 +59,7 @@ public class JwtService {
                 .getBody();
     }
 
+    // 3. VALIDATE TOKEN (Fixes the second error - must return boolean!)
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token);

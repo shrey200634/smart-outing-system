@@ -1,4 +1,5 @@
 package com.smartouting.outing_service.service;
+
 import com.smartouting.outing_service.dto.OutingRequestDTO;
 import com.smartouting.outing_service.dto.OutingResponseDTO;
 import com.smartouting.outing_service.exception.ResourseNotFoundException;
@@ -68,9 +69,6 @@ public class OutingService {
         throw new ResourseNotFoundException("Student is NOT approved to leave! Current status: " + outing.getStatus());
     }
 
-
-
-
     // FIX: Guard scans student IN (returning to campus)
     public OutingResponseDTO verifyAndMarkReturn(Long id) {
         Outing outing = outingRepository.findById(id).orElseThrow(() -> new ResourseNotFoundException("Outing " + id + " not found"));
@@ -95,14 +93,12 @@ public class OutingService {
     // used in wardern dashboard
 
     public List<Outing> getAllOuting() {
-
         return outingRepository.findAll();
     }
     public Outing getOutingById(Long id) {
         return outingRepository.findById(id).orElseThrow(() -> new ResourseNotFoundException("Not found: " + id));
     }
     public List<Outing> getOutingsByStudentId(String studentId) {
-
         return outingRepository.findByStudentId(studentId);
     }
 }
