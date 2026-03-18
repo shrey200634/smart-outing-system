@@ -11,7 +11,7 @@ export default function Login({ onSwitchToRegister }) {
   const [active, setActive] = useState("");
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setTimeout(() => setMounted(true), 40); }, []);
+  useEffect(() => { setTimeout(() => setMounted(true), 50); }, []);
 
   const handleChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -31,196 +31,161 @@ export default function Login({ onSwitchToRegister }) {
     } finally { setLoading(false); }
   };
 
-  const inp = (name) => ({
-    width:"100%", padding:"12px 14px 12px 42px", borderRadius:8,
-    border: `1px solid ${active===name ? "var(--accent)" : "var(--border-3)"}`,
-    background: active===name ? "rgba(129,140,248,0.04)" : "var(--bg-3)",
-    boxShadow: active===name ? "0 0 0 3px rgba(129,140,248,0.08)" : "none",
-    color:"var(--text-1)", fontSize:14, outline:"none", transition:"all 0.2s",
+  const inputStyle = (name) => ({
+    width:"100%", padding:"14px 16px 14px 46px", borderRadius:12,
+    border: `1.5px solid ${active===name ? "var(--accent)" : "var(--border-2)"}`,
+    background: "#fff",
+    boxShadow: active===name ? "0 0 0 4px rgba(108,92,231,0.08)" : "0 1px 3px rgba(0,0,0,0.04)",
+    color:"var(--text-1)", fontSize:15, outline:"none", transition:"all 0.2s",
   });
 
   return (
-    <div style={{minHeight:"100vh",background:"var(--bg)",display:"flex",fontFamily:"'Inter',sans-serif",position:"relative",overflow:"hidden"}}>
+    <div style={{minHeight:"100vh",display:"flex",fontFamily:"'Inter',sans-serif",position:"relative",overflow:"hidden"}}>
       <style>{`
-        input { color-scheme:dark; }
         ::placeholder { color: var(--text-4) !important; }
-
-        .login-grid {
-          position:fixed; inset:0; z-index:0; pointer-events:none;
-          background:
-            radial-gradient(ellipse 60% 50% at 25% 50%, rgba(129,140,248,0.04) 0%, transparent 60%),
-            radial-gradient(ellipse 50% 60% at 75% 30%, rgba(192,132,252,0.03) 0%, transparent 60%);
-        }
-
-        .lp { opacity:0; transform:translateY(20px); transition:opacity 0.6s ease,transform 0.6s ease; }
-        .rp { opacity:0; transform:translateY(20px); transition:opacity 0.6s ease 0.1s,transform 0.6s ease 0.1s; }
-        .lp.in,.rp.in { opacity:1; transform:translateY(0); }
-
-        .s1 { opacity:0; animation:fadeUp 0.5s ease 0.2s forwards; }
-        .s2 { opacity:0; animation:fadeUp 0.5s ease 0.28s forwards; }
-        .s3 { opacity:0; animation:fadeUp 0.5s ease 0.36s forwards; }
-        .s4 { opacity:0; animation:fadeUp 0.5s ease 0.42s forwards; }
-        .s5 { opacity:0; animation:fadeUp 0.5s ease 0.48s forwards; }
-        .s6 { opacity:0; animation:fadeUp 0.5s ease 0.54s forwards; }
-
-        .pri-btn {
-          width:100%; padding:12px; border:none; border-radius:8px;
-          background: var(--accent-2);
-          color:#fff; font-size:14px; font-weight:600;
-          cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
-          transition: background 0.2s, transform 0.15s;
-        }
-        .pri-btn:hover:not(:disabled) { background:#4F46E5; }
-        .pri-btn:active:not(:disabled) { transform:scale(0.98); }
-
-        .sec-btn {
-          width:100%; padding:11px; border:1px solid var(--border-3);
-          border-radius:8px; background:transparent;
-          color:var(--text-2); font-size:14px; font-weight:500;
-          cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
-          transition:all 0.2s;
-        }
-        .sec-btn:hover { border-color:var(--accent); color:var(--accent); }
-
+        .fade-in { opacity:0; transform:translateY(20px); transition:opacity 0.7s ease,transform 0.7s ease; }
+        .fade-in.show { opacity:1; transform:translateY(0); }
         @keyframes fadeUp { to{opacity:1;transform:translateY(0)} }
         @keyframes spin { to{transform:rotate(360deg)} }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
       `}</style>
 
-      <div className="login-grid" />
-
-      {/* LEFT PANEL */}
-      <div className={`lp ${mounted?"in":""}`} style={{
-        flex:"0 0 50%", position:"relative", zIndex:2,
+      {/* LEFT — Hero Panel with gradient */}
+      <div className={`fade-in ${mounted?"show":""}`} style={{
+        flex:"0 0 48%", position:"relative", zIndex:2,
         display:"flex", flexDirection:"column", justifyContent:"center",
         padding:"60px 64px",
-        borderRight:"1px solid var(--border)",
+        background:"linear-gradient(135deg, #6C5CE7 0%, #a29bfe 50%, #fd79a8 100%)",
+        color:"#fff",
+        overflow:"hidden",
       }}>
+        {/* Decorative circles */}
+        <div style={{position:"absolute",top:"-10%",right:"-15%",width:300,height:300,borderRadius:"50%",background:"rgba(255,255,255,0.08)"}}/>
+        <div style={{position:"absolute",bottom:"-20%",left:"-10%",width:400,height:400,borderRadius:"50%",background:"rgba(255,255,255,0.05)"}}/>
+        <div style={{position:"absolute",top:"30%",right:"10%",width:100,height:100,borderRadius:"50%",background:"rgba(255,255,255,0.06)",animation:"float 4s ease-in-out infinite"}}/>
+
         {/* Brand */}
-        <div className="s1" style={{display:"flex",alignItems:"center",gap:10,marginBottom:48}}>
-          <div style={{width:36,height:36,borderRadius:8,background:"var(--accent-dim)",border:"1px solid rgba(129,140,248,0.2)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
-              <path d="M16 2L28 8V16C28 22.627 22.627 28 16 30C9.373 28 4 22.627 4 16V8L16 2Z" fill="var(--accent)"/>
-              <path d="M12 16L15 19L21 13" stroke="#09090B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:52,position:"relative",zIndex:1}}>
+          <div style={{width:42,height:42,borderRadius:12,background:"rgba(255,255,255,0.2)",backdropFilter:"blur(10px)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+              <path d="M16 2L28 8V16C28 22.627 22.627 28 16 30C9.373 28 4 22.627 4 16V8L16 2Z" fill="#fff"/>
+              <path d="M12 16L15 19L21 13" stroke="#6C5CE7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <span style={{fontSize:15,fontWeight:700,color:"var(--text-1)",letterSpacing:"-0.3px"}}>SmartOuting</span>
-        </div>
-
-        {/* Eyebrow */}
-        <div className="s2" style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-          <div style={{width:16,height:2,background:"var(--accent)",borderRadius:2}}/>
-          <span style={{fontSize:11,fontWeight:600,color:"var(--text-3)",letterSpacing:"1.5px",textTransform:"uppercase"}}>Campus Exit Management</span>
+          <span style={{fontSize:18,fontWeight:800,letterSpacing:"-0.5px"}}>SmartOuting</span>
         </div>
 
         {/* Headline */}
-        <h1 className="s3" style={{fontSize:42,fontWeight:800,color:"var(--text-1)",lineHeight:1.15,letterSpacing:"-1.5px",marginBottom:16}}>
-          Every exit,<br/>tracked &{" "}
-          <span style={{color:"var(--accent)"}}>secured.</span>
+        <h1 style={{fontSize:44,fontWeight:900,lineHeight:1.1,letterSpacing:"-2px",marginBottom:20,position:"relative",zIndex:1}}>
+          Every exit,<br/>tracked &<br/>secured.
         </h1>
 
-        <p className="s4" style={{fontSize:15,color:"var(--text-3)",lineHeight:1.7,maxWidth:380,marginBottom:36}}>
-          Smart approvals, real-time QR gate scanning, and instant parent notifications — all in one place.
+        <p style={{fontSize:16,lineHeight:1.7,opacity:0.85,maxWidth:360,marginBottom:40,position:"relative",zIndex:1}}>
+          Smart approvals, real-time QR gate scanning, and instant parent notifications.
         </p>
 
-        {/* Stats row */}
-        <div className="s5" style={{display:"flex",gap:0,background:"var(--bg-2)",border:"1px solid var(--border-2)",borderRadius:10,overflow:"hidden",marginBottom:28}}>
-          {[{v:"AI",l:"Urgency Detection"},{v:"QR",l:"Gate Scanning"},{v:"24/7",l:"Monitoring"}].map((s,i)=>(
-            <div key={s.v} style={{flex:1,padding:"14px 16px",textAlign:"center",borderRight:i<2?"1px solid var(--border-2)":"none"}}>
-              <div style={{fontSize:15,fontWeight:700,color:"var(--accent)",marginBottom:2,fontFamily:"'JetBrains Mono',monospace"}}>{s.v}</div>
-              <div style={{fontSize:10,color:"var(--text-4)",fontWeight:500,letterSpacing:"0.2px"}}>{s.l}</div>
+        {/* Feature cards */}
+        <div style={{display:"flex",gap:12,position:"relative",zIndex:1}}>
+          {[{v:"AI",l:"Detection"},{v:"QR",l:"Scanning"},{v:"24/7",l:"Monitoring"}].map(s=>(
+            <div key={s.v} style={{padding:"14px 20px",background:"rgba(255,255,255,0.15)",backdropFilter:"blur(10px)",borderRadius:12,border:"1px solid rgba(255,255,255,0.2)",textAlign:"center",flex:1}}>
+              <div style={{fontSize:18,fontWeight:800,marginBottom:2,fontFamily:"'JetBrains Mono',monospace"}}>{s.v}</div>
+              <div style={{fontSize:11,opacity:0.75,fontWeight:500}}>{s.l}</div>
             </div>
           ))}
         </div>
 
-        {/* Role pills */}
-        <div className="s6" style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          {[
-            {label:"Students",   c:"var(--accent)", b:"var(--accent-dim)", bd:"rgba(129,140,248,0.2)"},
-            {label:"Wardens",    c:"var(--purple)",  b:"rgba(192,132,252,0.08)", bd:"rgba(192,132,252,0.2)"},
-            {label:"Gate Guards", c:"var(--green)",  b:"rgba(52,211,153,0.08)", bd:"rgba(52,211,153,0.2)"},
-          ].map(r=>(
-            <div key={r.label} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:6,fontSize:12,fontWeight:600,background:r.b,border:`1px solid ${r.bd}`,color:r.c}}>
-              {r.label}
-            </div>
+        {/* Role tags */}
+        <div style={{display:"flex",gap:8,marginTop:24,position:"relative",zIndex:1}}>
+          {["Students","Wardens","Guards"].map(r=>(
+            <span key={r} style={{padding:"6px 14px",borderRadius:99,fontSize:12,fontWeight:600,background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.2)"}}>{r}</span>
           ))}
         </div>
       </div>
 
-      {/* RIGHT PANEL */}
-      <div className={`rp ${mounted?"in":""}`} style={{flex:1,position:"relative",zIndex:2,display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 48px"}}>
-        <div style={{width:"100%",maxWidth:380}}>
+      {/* RIGHT — Form Panel */}
+      <div className={`fade-in ${mounted?"show":""}`} style={{
+        flex:1, display:"flex", alignItems:"center", justifyContent:"center",
+        padding:"40px 52px", background:"var(--bg)",
+        transition:"opacity 0.7s ease 0.15s, transform 0.7s ease 0.15s",
+      }}>
+        <div style={{width:"100%",maxWidth:400}}>
 
-          {/* Form header */}
-          <div className="s2" style={{marginBottom:28}}>
-            <div style={{display:"inline-flex",alignItems:"center",gap:6,padding:"4px 10px",borderRadius:6,background:"var(--bg-3)",border:"1px solid var(--border-2)",color:"var(--text-3)",fontSize:11,fontWeight:500,marginBottom:16}}>
-              <div style={{width:5,height:5,borderRadius:"50%",background:"var(--green)"}}/>
+          {/* Header */}
+          <div style={{marginBottom:32}}>
+            <div style={{display:"inline-flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:99,background:"var(--accent-dim)",color:"var(--accent)",fontSize:12,fontWeight:600,marginBottom:20}}>
+              <div style={{width:6,height:6,borderRadius:"50%",background:"var(--green)"}}/>
               Secure Portal
             </div>
-            <h2 style={{fontSize:24,fontWeight:700,color:"var(--text-1)",letterSpacing:"-0.5px",marginBottom:6}}>Welcome back</h2>
-            <p style={{fontSize:14,color:"var(--text-3)",lineHeight:1.5}}>Sign in with your registered name</p>
+            <h2 style={{fontSize:28,fontWeight:800,color:"var(--text-1)",letterSpacing:"-1px",marginBottom:8}}>Welcome back</h2>
+            <p style={{fontSize:15,color:"var(--text-3)",lineHeight:1.5}}>Sign in with your registered name to continue</p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{display:"flex",flexDirection:"column",gap:16}}>
-
+          <form onSubmit={handleSubmit} style={{display:"flex",flexDirection:"column",gap:18}}>
             {/* Username */}
-            <div className="s3" style={{display:"flex",flexDirection:"column",gap:6}}>
-              <label style={{fontSize:13,fontWeight:500,color:"var(--text-2)"}}>Full Name</label>
+            <div style={{display:"flex",flexDirection:"column",gap:7}}>
+              <label style={{fontSize:14,fontWeight:600,color:"var(--text-1)"}}>Full Name</label>
               <div style={{position:"relative"}}>
-                <div style={{position:"absolute",left:13,top:"50%",transform:"translateY(-50%)",pointerEvents:"none",color:active==="username"?"var(--accent)":"var(--text-4)",transition:"color 0.2s",display:"flex"}}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div style={{position:"absolute",left:16,top:"50%",transform:"translateY(-50%)",pointerEvents:"none",color:active==="username"?"var(--accent)":"var(--text-4)",transition:"color 0.2s",display:"flex"}}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </div>
                 <input name="username" value={form.username} onChange={handleChange}
                   onFocus={()=>setActive("username")} onBlur={()=>setActive("")}
                   placeholder="e.g. Rahul Sharma" autoComplete="username"
-                  style={inp("username")}/>
+                  style={inputStyle("username")}/>
               </div>
             </div>
 
             {/* Password */}
-            <div className="s4" style={{display:"flex",flexDirection:"column",gap:6}}>
-              <label style={{fontSize:13,fontWeight:500,color:"var(--text-2)"}}>Password</label>
+            <div style={{display:"flex",flexDirection:"column",gap:7}}>
+              <label style={{fontSize:14,fontWeight:600,color:"var(--text-1)"}}>Password</label>
               <div style={{position:"relative"}}>
-                <div style={{position:"absolute",left:13,top:"50%",transform:"translateY(-50%)",pointerEvents:"none",color:active==="password"?"var(--accent)":"var(--text-4)",transition:"color 0.2s",display:"flex"}}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <div style={{position:"absolute",left:16,top:"50%",transform:"translateY(-50%)",pointerEvents:"none",color:active==="password"?"var(--accent)":"var(--text-4)",transition:"color 0.2s",display:"flex"}}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 </div>
                 <input name="password" type={showPass?"text":"password"} value={form.password} onChange={handleChange}
                   onFocus={()=>setActive("password")} onBlur={()=>setActive("")}
                   placeholder="Your password" autoComplete="current-password"
-                  style={{...inp("password"),paddingRight:42}}/>
-                <button type="button" onClick={()=>setShowPass(p=>!p)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",padding:4,display:"flex",borderRadius:6,color:"var(--text-4)"}}>
+                  style={{...inputStyle("password"),paddingRight:46}}/>
+                <button type="button" onClick={()=>setShowPass(p=>!p)} style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",padding:4,display:"flex",borderRadius:6,color:"var(--text-4)"}}>
                   {showPass
-                    ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                    : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   }
                 </button>
               </div>
             </div>
 
             {/* Submit */}
-            <div className="s5" style={{marginTop:4}}>
-              <button type="submit" disabled={loading} className="pri-btn" style={{opacity:loading?0.7:1}}>
-                {loading
-                  ? <><span style={{width:15,height:15,border:"2px solid rgba(255,255,255,0.3)",borderTopColor:"#fff",borderRadius:"50%",animation:"spin 0.7s linear infinite",display:"inline-block"}}/> Signing in...</>
-                  : <>Sign In <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></>
-                }
-              </button>
-            </div>
+            <button type="submit" disabled={loading} style={{
+              width:"100%", padding:"14px", border:"none", borderRadius:12,
+              background:"var(--accent)", color:"#fff", fontSize:15, fontWeight:700,
+              cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+              boxShadow:"0 4px 14px rgba(108,92,231,0.35)",
+              transition:"all 0.2s", opacity:loading?0.7:1, marginTop:4,
+            }}>
+              {loading
+                ? <><span style={{width:16,height:16,border:"2px solid rgba(255,255,255,0.3)",borderTopColor:"#fff",borderRadius:"50%",animation:"spin 0.7s linear infinite",display:"inline-block"}}/> Signing in...</>
+                : <>Sign In <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></>
+              }
+            </button>
           </form>
 
           {/* Divider */}
-          <div className="s6" style={{display:"flex",alignItems:"center",gap:12,margin:"20px 0 14px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:14,margin:"24px 0 18px"}}>
             <span style={{flex:1,height:"1px",background:"var(--border-2)"}}/>
-            <span style={{fontSize:12,color:"var(--text-4)"}}>or</span>
+            <span style={{fontSize:13,color:"var(--text-4)"}}>or</span>
             <span style={{flex:1,height:"1px",background:"var(--border-2)"}}/>
           </div>
 
-          <div className="s6">
-            <button onClick={onSwitchToRegister} className="sec-btn">
-              Create account
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </button>
-          </div>
-
+          <button onClick={onSwitchToRegister} style={{
+            width:"100%", padding:"13px", border:"1.5px solid var(--border-2)",
+            borderRadius:12, background:"#fff", color:"var(--text-2)", fontSize:14, fontWeight:600,
+            cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+            transition:"all 0.2s", boxShadow:"0 1px 3px rgba(0,0,0,0.04)",
+          }}>
+            Create account
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
         </div>
       </div>
     </div>

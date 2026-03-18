@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -10,43 +10,49 @@ html {
 }
 
 :root {
-  /* Warm dark palette — premium & modern */
-  --bg:        #09090B;
-  --bg-2:      #18181B;
-  --bg-3:      #27272A;
-  --bg-4:      #3F3F46;
-  --border:    rgba(255,255,255,0.06);
-  --border-2:  rgba(255,255,255,0.09);
-  --border-3:  rgba(255,255,255,0.14);
+  /* LIGHT THEME — warm & clean */
+  --bg:        #F7F7F5;
+  --bg-2:      #FFFFFF;
+  --bg-3:      #F0F0EE;
+  --bg-4:      #E8E8E5;
+  --border:    rgba(0,0,0,0.06);
+  --border-2:  rgba(0,0,0,0.10);
+  --border-3:  rgba(0,0,0,0.15);
 
-  /* Text — warm zinc scale */
-  --text-1:    #FAFAFA;
-  --text-2:    #A1A1AA;
-  --text-3:    #71717A;
-  --text-4:    #52525B;
+  /* Text — rich warm darks */
+  --text-1:    #1A1A1A;
+  --text-2:    #4A4A4A;
+  --text-3:    #8A8A8A;
+  --text-4:    #B5B5B5;
 
-  /* Primary accent — soft indigo/lavender */
-  --accent:    #818CF8;
-  --accent-2:  #6366F1;
-  --accent-dim: rgba(129,140,248,0.10);
-  --accent-glow: rgba(129,140,248,0.15);
+  /* Primary — rich indigo-violet */
+  --accent:    #6C5CE7;
+  --accent-2:  #5A4BD1;
+  --accent-dim: rgba(108,92,231,0.08);
+  --accent-glow: rgba(108,92,231,0.12);
+  --accent-text: #FFFFFF;
 
-  /* Secondary — warm rose */
-  --rose:      #FB7185;
-  --rose-dim:  rgba(251,113,133,0.10);
+  /* Secondary — warm coral */
+  --coral:     #FF6B6B;
+  --coral-dim: rgba(255,107,107,0.08);
 
   /* Status */
-  --amber:     #FBBF24;
-  --green:     #34D399;
-  --red:       #FB7185;
-  --orange:    #FB923C;
-  --purple:    #C084FC;
+  --amber:     #F0A500;
+  --green:     #00B894;
+  --red:       #E74C3C;
+  --orange:    #F39C12;
+  --purple:    #A29BFE;
+
+  /* Sidebar — dark contrast */
+  --sidebar-bg: #1E1E2E;
+  --sidebar-text: #C8C8D0;
+  --sidebar-active: rgba(108,92,231,0.15);
 }
 
 body {
   background: var(--bg);
   color: var(--text-2);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -62,28 +68,16 @@ body {
 
 input, textarea, select, button { font-family: inherit; }
 
-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.5) sepia(1) saturate(3) hue-rotate(210deg);
-  cursor: pointer;
-}
-
-::selection { background: rgba(129,140,248,0.25); color: var(--text-1); }
+::selection { background: rgba(108,92,231,0.20); color: var(--text-1); }
 
 button:not(:disabled):active { transform: scale(0.98); }
 
 input:focus, textarea:focus, select:focus {
   border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px rgba(129,140,248,0.10) !important;
-}
-
-* {
-  transition-property: color, background-color, border-color, opacity, box-shadow;
-  transition-duration: 0.15s;
-  transition-timing-function: ease;
+  box-shadow: 0 0 0 3px rgba(108,92,231,0.10) !important;
 }
 
 @keyframes spin     { to { transform: rotate(360deg); } }
 @keyframes fadeUp   { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideIn  { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes pulse    { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
-@keyframes shimmer  { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
