@@ -31,6 +31,14 @@ export default function Login({ onSwitchToRegister, onSwitchToAdminRegister }) {
     } finally { setLoading(false); }
   };
 
+  const inp = (name) => ({
+    width:"100%", padding:"13px 14px 13px 44px", borderRadius:10,
+    border: `1.5px solid ${active===name ? "var(--accent)" : "var(--border-2)"}`,
+    background: active===name ? "rgba(45,212,191,0.04)" : "var(--bg-3)",
+    boxShadow: active===name ? "0 0 0 3px rgba(45,212,191,0.1)" : "none",
+    color:"var(--text-1)", fontSize:14, outline:"none", transition:"all 0.2s",
+  });
+
   return (
     <div style={{ minHeight:"100vh", background:"var(--bg)", display:"flex", fontFamily:"'Inter',sans-serif", position:"relative", overflow:"hidden" }}>
       <style>{`
