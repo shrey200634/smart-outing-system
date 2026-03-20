@@ -1,1 +1,30 @@
 
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# Java / Gradle
+build/
+.gradle/
+bin/
+out/
+*.class
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
