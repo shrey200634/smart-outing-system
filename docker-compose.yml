@@ -1,0 +1,101 @@
+services:
+
+  # ───────── MySQL ─────────
+  mysql:
+    image: mysql:8.0
+    container_name: smartouting-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: outing_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ───────── Eureka Service Registry ─────────
+  service-registry:
+    build: ./Backened/service-registry
+    container_name: service-registry
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ───────── API Gateway ─────────
+  api-gateway:
+    build: ./Backened/api-gateway
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "8989:8989"
+    environment:
+      EUREKA_URL: http://service-registry:8761/eureka/
+    depends_on:
+      service-registry:
+        condition: service_healthy
+
+  # ───────── Identity Service ─────────
+  identity-service:
+    build: ./Backened/identity-service
+    container_name: identity-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      EUREKA_URL: http://service-registry:8761/eureka/
+    depends_on:
+      mysql:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+
+  # ───────── Outing Service ─────────
+  outing-service:
+    build: ./Backened/outing-service
+    container_name: outing-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      EUREKA_URL: http://service-registry:8761/eureka/
+    depends_on:
+      mysql:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+
+  # ───────── Frontend ─────────
+  frontend:
+    build: ./frontend
+    container_name: smartouting-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+
+volumes:
+  mysql_data:

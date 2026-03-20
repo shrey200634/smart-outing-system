@@ -5,18 +5,18 @@ spring:
   application:
     name: outing-service
   datasource:
-    url: jdbc:mysql://localhost:3306/outing_db?createDatabaseIfNotExist=true
-    username: root
-    password: pass
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/outing_db?createDatabaseIfNotExist=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:changeme}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-  mail:                          # ← MUST be under 'spring:', not at root level
+  mail:
     host: smtp.gmail.com
     port: 587
-    username: dshrey60@gmail.com
+    username: ${MAIL_USERNAME:your_email@gmail.com}
     password: ${MAIL_PASSWORD:your_app_password}
     properties:
       mail:
@@ -26,6 +26,8 @@ spring:
             enable: true
 
 eureka:
+  instance:
+    prefer-ip-address: true
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
