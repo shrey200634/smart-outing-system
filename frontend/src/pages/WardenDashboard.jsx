@@ -25,7 +25,7 @@ const AI_FLAGS = {
   UNCATEGORIZED:{color:"#fff",bg:"#7F8C8D",label:"Uncategorized"},
 };
 function Badge({status}) { const s=STATUS_MAP[status]||STATUS_MAP.PENDING; return <span style={{padding:"3px 10px",borderRadius:99,fontSize:10,fontWeight:700,background:s.bg,color:s.color,border:`1px solid ${s.border}`}}>{status}</span>; }
-function AiChip({flag,score}) { if(!flag)return null; const i=AI_FLAGS[flag]||{color:"#fff",bg:"#8A8A8A",label:flag}; return <span style={{padding:"4px 12px",borderRadius:99,fontSize:10,fontWeight:700,background:i.bg,color:i.color,letterSpacing:"0.3px",boxShadow:`0 2px 8px ${i.bg}40`}}>{i.label} &middot; {score}</span>; }
+function AiChip({flag,score}) { if(!flag)return null; const i=AI_FLAGS[flag]||{color:"#fff",bg:"#8A8A8A",label:flag}; return <span style={{padding:"4px 10px",borderRadius:99,fontSize:10,fontWeight:700,background:i.bg,color:i.color,letterSpacing:"0.3px",boxShadow:`0 2px 8px ${i.bg}40`,whiteSpace:"nowrap",display:"inline-block"}}>{i.label} &middot; {score}</span>; }
 function formatDT(dt) { if(!dt)return"\u2014"; return new Date(dt).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"}); }
 
 export default function WardenDashboard() {
@@ -128,11 +128,11 @@ export default function WardenDashboard() {
           </div>
         ):(
           <div style={{background:"#fff",border:"1px solid var(--border)",borderRadius:14,overflow:"hidden",boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
-            <div style={{display:"grid",gridTemplateColumns:"50px 130px 1fr 130px 150px 100px 100px",gap:14,padding:"12px 20px",background:"var(--bg-3)",borderBottom:"1px solid var(--border)"}}>
+            <div style={{display:"grid",gridTemplateColumns:"50px 130px 1fr 170px 150px 100px 100px",gap:14,padding:"12px 20px",background:"var(--bg-3)",borderBottom:"1px solid var(--border)"}}>
               {["ID","Student","Destination & Reason","AI Analysis","Dates","Status","Actions"].map(h=><div key={h} style={{fontSize:10,fontWeight:700,color:"var(--text-3)",textTransform:"uppercase",letterSpacing:"0.5px"}}>{h}</div>)}
             </div>
             {filtered.map(o=>(
-              <div key={o.id} style={{display:"grid",gridTemplateColumns:"50px 130px 1fr 130px 150px 100px 100px",gap:14,padding:"14px 20px",borderBottom:"1px solid var(--border)",alignItems:"center",animation:"fadeIn 0.2s ease",background:selected?.id===o.id?"var(--accent-dim)":"transparent"}}>
+              <div key={o.id} style={{display:"grid",gridTemplateColumns:"50px 130px 1fr 170px 150px 100px 100px",gap:14,padding:"14px 20px",borderBottom:"1px solid var(--border)",alignItems:"center",animation:"fadeIn 0.2s ease",background:selected?.id===o.id?"var(--accent-dim)":"transparent"}}>
                 <div style={{color:"var(--accent)",fontWeight:600,fontSize:13}}>#{o.id}</div>
                 <div>
                   <div style={{color:"var(--text-1)",fontWeight:600,fontSize:13}}>{o.studentName}</div>
