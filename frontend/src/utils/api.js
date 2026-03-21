@@ -1,9 +1,7 @@
 // ============================================================
 //  API Utility — Smart Outing System
-//  Production: Points to Railway API Gateway
+//  Netlify proxies /auth and /outing to Railway API Gateway
 // ============================================================
-
-const BASE = "https://outstanding-rejoicing-production-baf8.up.railway.app";
 
 async function request(url, options = {}) {
   const token = localStorage.getItem("sos_token");
@@ -12,7 +10,7 @@ async function request(url, options = {}) {
 
   let res;
   try {
-    res = await fetch(BASE + url, { ...options, headers });
+    res = await fetch(url, { ...options, headers });
   } catch {
     throw new Error(
       "Network error: Cannot reach the server. Please try again later."
