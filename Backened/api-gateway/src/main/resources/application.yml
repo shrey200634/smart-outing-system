@@ -6,19 +6,34 @@ spring:
     name: api-gateway
   cloud:
     gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - PATCH
+            allowedHeaders: "*"
+            exposedHeaders:
+              - Authorization
+            allowCredentials: true
+            maxAge: 3600
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
-
       routes:
         - id: identity-service
-          uri: lb://IDENTITY-SERVICE
+          uri: ${IDENTITY_URI:lb://IDENTITY-SERVICE}
           predicates:
             - Path=/auth/**
-
         - id: outing-service
-          uri: lb://OUTING-SERVICE
+          uri: ${OUTING_URI:lb://OUTING-SERVICE}
           predicates:
             - Path=/outing/**
 
