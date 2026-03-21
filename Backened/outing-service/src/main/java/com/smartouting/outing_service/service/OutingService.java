@@ -65,6 +65,21 @@ public class OutingService {
         return mapToResponse(saved);
     }
 
+    // Reject the outing
+
+    public OutingResponseDTO rejectOuting(Long id, String comment) {
+        Outing outing = outingRepository.findById(id)
+                .orElseThrow(() -> new ResourseNotFoundException("Outing " + id + " not found"));
+        outing.setStatus("REJECTED");
+        outing.setWardenComment(comment);
+        Outing saved = outingRepository.save(outing);
+
+        if (saved.getStudentEmail() != null && !saved.getStudentEmail().isBlank()) {
+            emailService.sendRejectionEmail(saved);
+        }
+        return mapToResponse(saved);
+    }
+
     // Guard scans student OUT (leaving campus)
     public OutingResponseDTO verifyAndMarkOut(Long id) {
         Outing outing = outingRepository.findById(id).orElseThrow(() -> new ResourseNotFoundException("Outing " + id + " not found"));

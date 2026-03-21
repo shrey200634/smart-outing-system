@@ -82,6 +82,11 @@ export const outingAPI = {
       method: "PUT",
     }),
 
+  reject: (id, comment) =>
+    request(`/outing/reject/${id}?comment=${encodeURIComponent(comment)}`, {
+      method: "PUT",
+    }),
+
   scan: (id) =>
     request(`/outing/scan/${id}`, { method: "PUT" }),
 

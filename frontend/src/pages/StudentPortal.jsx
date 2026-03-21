@@ -9,6 +9,7 @@ const STATUS_COLORS = {
   OUT:      { bg: "rgba(45,212,191,0.08)", color: "#2DD4BF", border: "rgba(45,212,191,0.20)" },
   OVERDUE:  { bg: "rgba(231,76,60,0.08)", color: "#E74C3C", border: "rgba(231,76,60,0.20)" },
   RETURNED: { bg: "rgba(138,138,138,0.08)", color: "#8A8A8A", border: "rgba(138,138,138,0.20)" },
+  REJECTED: { bg: "rgba(192,57,43,0.08)", color: "#C0392B", border: "rgba(192,57,43,0.20)" },
 };
 
 function StatusBadge({ status }) {
@@ -242,6 +243,16 @@ export default function StudentPortal() {
                     <div style={{marginTop:14,padding:14,background:"rgba(0,184,148,0.06)",borderRadius:10,border:"1px solid rgba(0,184,148,0.15)"}}>
                       <div style={{color:"var(--green)",fontSize:12,fontWeight:700,marginBottom:10}}>Approved — Show this QR to the guard</div>
                       <img src={o.qrCodeUrl} alt="QR Code" style={{width:110,height:110,borderRadius:8,background:"white",padding:4}} />
+                    </div>
+                  )}
+                  {o.status==="REJECTED" && (
+                    <div style={{marginTop:14,padding:14,background:"rgba(231,76,60,0.06)",borderRadius:10,border:"1px solid rgba(231,76,60,0.15)"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E74C3C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        <span style={{color:"#C0392B",fontSize:12,fontWeight:700}}>Request Rejected by Warden</span>
+                      </div>
+                      {o.wardenComment && <div style={{color:"#991B1B",fontSize:13,fontWeight:500,marginBottom:8}}>"{o.wardenComment}"</div>}
+                      <div style={{fontSize:12,color:"var(--text-3)"}}>If you have concerns, please contact the hostel administration office.</div>
                     </div>
                   )}
                 </div>

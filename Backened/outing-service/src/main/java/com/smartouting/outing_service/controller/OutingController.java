@@ -26,6 +26,11 @@ public class OutingController {
         return ResponseEntity.ok(service.approveOuting(id, comment));
     }
 
+    @PutMapping("/reject/{id}")
+    public ResponseEntity<OutingResponseDTO> reject(@PathVariable Long id, @RequestParam String comment) {
+        return ResponseEntity.ok(service.rejectOuting(id, comment));
+    }
+
     @PutMapping("/scan/{id}")
     public ResponseEntity<OutingResponseDTO> scan(@PathVariable Long id) {
         return ResponseEntity.ok(service.verifyAndMarkOut(id));

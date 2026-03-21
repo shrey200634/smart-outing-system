@@ -9,6 +9,7 @@ const STATUS_MAP = {
   OUT:      { bg:"rgba(45,212,191,0.08)",color:"#2DD4BF",border:"rgba(45,212,191,0.20)" },
   OVERDUE:  { bg:"rgba(231,76,60,0.08)",color:"#E74C3C",border:"rgba(231,76,60,0.20)" },
   RETURNED: { bg:"rgba(138,138,138,0.08)",color:"#8A8A8A",border:"rgba(138,138,138,0.20)" },
+  REJECTED: { bg:"rgba(192,57,43,0.08)",color:"#C0392B",border:"rgba(192,57,43,0.20)" },
 };
 
 const AI_FLAGS = {
@@ -36,6 +37,7 @@ export default function WardenDashboard() {
   const [filter,setFilter]=useState("ALL");
   const [search,setSearch]=useState("");
   const [approving,setApproving]=useState(null);
+  const [rejecting,setRejecting]=useState(null);
   const [comment,setComment]=useState("");
   const [selected,setSelected]=useState(null);
 
@@ -44,9 +46,11 @@ export default function WardenDashboard() {
 
   const handleApprove=async(id)=>{if(!comment.trim())return toast("Enter a comment","warn");setApproving(id);try{await outingAPI.approve(id,comment.trim());toast("Approved! QR generated.","success");setComment("");setSelected(null);load();}catch(e){toast("Failed: "+e.message,"error");}finally{setApproving(null);}};
 
+  const handleReject=async(id)=>{if(!comment.trim())return toast("Enter a reason for rejection","warn");setRejecting(id);try{await outingAPI.reject(id,comment.trim());toast("Request rejected. Student notified via email.","success");setComment("");setSelected(null);load();}catch(e){toast("Failed: "+e.message,"error");}finally{setRejecting(null);}};
+
   const filtered=outings.filter(o=>(filter==="ALL"||o.status===filter)&&(!search||o.studentName?.toLowerCase().includes(search.toLowerCase())||o.studentId?.toLowerCase().includes(search.toLowerCase())||String(o.id).includes(search)));
-  const stats={total:outings.length,pending:outings.filter(o=>o.status==="PENDING").length,approved:outings.filter(o=>o.status==="APPROVED").length,out:outings.filter(o=>o.status==="OUT").length,overdue:outings.filter(o=>o.status==="OVERDUE").length};
-  const FILTERS=["ALL","PENDING","APPROVED","OUT","OVERDUE","RETURNED"];
+  const stats={total:outings.length,pending:outings.filter(o=>o.status==="PENDING").length,approved:outings.filter(o=>o.status==="APPROVED").length,out:outings.filter(o=>o.status==="OUT").length,overdue:outings.filter(o=>o.status==="OVERDUE").length,rejected:outings.filter(o=>o.status==="REJECTED").length};
+  const FILTERS=["ALL","PENDING","APPROVED","OUT","OVERDUE","RETURNED","REJECTED"];
 
   return (
     <div style={{display:"flex",minHeight:"100vh",fontFamily:"'Inter',sans-serif"}}>
@@ -79,7 +83,7 @@ export default function WardenDashboard() {
           </div>
 
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-            {[{l:"Total",v:stats.total,c:"#C8C8D0"},{l:"Pending",v:stats.pending,c:"#F0A500"},{l:"Approved",v:stats.approved,c:"#00B894"},{l:"Out",v:stats.out,c:"#2DD4BF"},{l:"Overdue",v:stats.overdue,c:"#E74C3C"}].map(s=>(
+            {[{l:"Total",v:stats.total,c:"#C8C8D0"},{l:"Pending",v:stats.pending,c:"#F0A500"},{l:"Approved",v:stats.approved,c:"#00B894"},{l:"Out",v:stats.out,c:"#2DD4BF"},{l:"Overdue",v:stats.overdue,c:"#E74C3C"},{l:"Rejected",v:stats.rejected,c:"#C0392B"}].map(s=>(
               <div key={s.l} style={{padding:"10px 12px",background:"rgba(255,255,255,0.04)",borderRadius:8,border:"1px solid rgba(255,255,255,0.06)"}}>
                 <div style={{fontSize:11,color:"var(--sidebar-text)",opacity:0.6}}>{s.l}</div>
                 <div style={{fontSize:18,fontWeight:700,color:s.c,fontFamily:"'JetBrains Mono',monospace",marginTop:2}}>{s.v}</div>
@@ -152,7 +156,7 @@ export default function WardenDashboard() {
                   {o.wardenComment&&<span style={{fontSize:10,color:"var(--text-3)",fontStyle:"italic"}}>&quot;{o.wardenComment.slice(0,30)}{o.wardenComment.length>30?"...":""}&quot;</span>}
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:5}}>
-                  {o.status==="PENDING"&&<button onClick={()=>{setSelected(o===selected?null:o);setComment("");}} style={{padding:"6px 12px",background:"rgba(0,184,148,0.08)",border:"1px solid rgba(0,184,148,0.2)",borderRadius:8,color:"#00B894",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>{selected?.id===o.id?"Cancel":"Approve"}</button>}
+                  {o.status==="PENDING"&&<button onClick={()=>{setSelected(o===selected?null:o);setComment("");}} style={{padding:"6px 12px",background:"rgba(0,184,148,0.08)",border:"1px solid rgba(0,184,148,0.2)",borderRadius:8,color:"#00B894",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>{selected?.id===o.id?"Cancel":"Review"}</button>}
                   {o.qrCodeUrl&&<button onClick={()=>setSelected(selected?.id===o.id?null:o)} style={{padding:"5px 10px",background:"var(--accent-dim)",border:"1px solid rgba(45,212,191,0.15)",borderRadius:8,color:"var(--accent)",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>QR Code</button>}
                 </div>
               </div>
@@ -160,24 +164,34 @@ export default function WardenDashboard() {
           </div>
         )}
 
-        {/* Approve panel */}
+        {/* Review panel */}
         {selected&&selected.status==="PENDING"&&(
           <div style={{marginTop:18,background:"#fff",border:"1px solid var(--border)",borderRadius:14,padding:24,boxShadow:"0 8px 30px rgba(0,0,0,0.08)",animation:"fadeIn 0.2s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
               <div>
-                <h3 style={{color:"var(--text-1)",fontWeight:700,fontSize:16}}>Approve Request #{selected.id}</h3>
+                <h3 style={{color:"var(--text-1)",fontWeight:700,fontSize:16}}>Review Request #{selected.id}</h3>
                 <p style={{color:"var(--text-3)",fontSize:13,marginTop:4}}>{selected.studentName} &bull; {selected.destination}</p>
               </div>
               <button onClick={()=>setSelected(null)} style={{background:"none",border:"none",color:"var(--text-3)",cursor:"pointer",fontSize:20}}>&times;</button>
             </div>
+            {/* Request details summary */}
+            <div style={{marginTop:14,padding:"12px 16px",background:"var(--bg)",borderRadius:10,border:"1px solid var(--border)",display:"flex",gap:20,flexWrap:"wrap",fontSize:13}}>
+              <div><span style={{color:"var(--text-3)"}}>Reason: </span><span style={{color:"var(--text-1)",fontWeight:500}}>{selected.reason}</span></div>
+              <div><span style={{color:"var(--text-3)"}}>Out: </span><span style={{color:"var(--text-1)",fontWeight:500}}>{formatDT(selected.outDate)}</span></div>
+              <div><span style={{color:"var(--text-3)"}}>Return: </span><span style={{color:"var(--text-1)",fontWeight:500}}>{formatDT(selected.returnDate)}</span></div>
+              {selected.aiFlag&&<div><span style={{color:"var(--text-3)"}}>AI: </span><AiChip flag={selected.aiFlag} score={selected.urgencyScore}/></div>}
+            </div>
             <div style={{marginTop:14}}>
-              <label style={{fontSize:14,fontWeight:600,color:"var(--text-1)"}}>Approval Comment</label>
-              <textarea value={comment} onChange={e=>setComment(e.target.value)} placeholder="Add your comment..." rows={3}
+              <label style={{fontSize:14,fontWeight:600,color:"var(--text-1)"}}>Warden Comment <span style={{color:"var(--text-3)",fontWeight:400,fontSize:12}}>(required)</span></label>
+              <textarea value={comment} onChange={e=>setComment(e.target.value)} placeholder="Add your comment or reason for rejection..." rows={3}
                 style={{width:"100%",padding:"12px 14px",marginTop:6,resize:"vertical",background:"#fff",border:"1.5px solid var(--border-2)",borderRadius:10,color:"var(--text-1)",fontSize:14,outline:"none"}} />
             </div>
             <div style={{display:"flex",gap:10,marginTop:14}}>
-              <button onClick={()=>handleApprove(selected.id)} disabled={approving===selected.id} style={{padding:"11px 22px",background:"var(--green)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 12px rgba(0,184,148,0.25)",opacity:approving===selected.id?0.7:1}}>
-                {approving===selected.id?"Approving...":"Confirm Approval & Generate QR"}
+              <button onClick={()=>handleApprove(selected.id)} disabled={approving===selected.id||rejecting===selected.id} style={{padding:"11px 22px",background:"var(--green)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 12px rgba(0,184,148,0.25)",opacity:approving===selected.id?0.7:1}}>
+                {approving===selected.id?"Approving...":"Approve & Generate QR"}
+              </button>
+              <button onClick={()=>handleReject(selected.id)} disabled={rejecting===selected.id||approving===selected.id} style={{padding:"11px 22px",background:"#E74C3C",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 12px rgba(231,76,60,0.25)",opacity:rejecting===selected.id?0.7:1}}>
+                {rejecting===selected.id?"Rejecting...":"Reject Request"}
               </button>
               <button onClick={()=>setSelected(null)} style={{padding:"11px 18px",background:"#fff",border:"1.5px solid var(--border-2)",borderRadius:10,color:"var(--text-2)",fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancel</button>
             </div>

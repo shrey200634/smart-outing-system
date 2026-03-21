@@ -107,4 +107,61 @@ public class EmailService {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Sends a rejection email to the student with warden's comment.
+     */
+    public void sendRejectionEmail(Outing outing) {
+        try {
+            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setFrom("smartOuting.system@gmail.com");
+            helper.setTo(outing.getStudentEmail());
+            helper.setSubject("\u274C Outing Rejected — Request #" + outing.getId());
+
+            String outDate = outing.getOutDate() != null ? outing.getOutDate().format(FMT) : "N/A";
+            String returnDate = outing.getReturnDate() != null ? outing.getReturnDate().format(FMT) : "N/A";
+
+            String html = """
+                <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb;">
+                  <div style="background:linear-gradient(135deg,#E74C3C,#C0392B);padding:28px 24px;text-align:center;">
+                    <h1 style="color:#fff;margin:0;font-size:22px;">❌ Outing Request Rejected</h1>
+                    <p style="color:rgba(255,255,255,0.9);margin:8px 0 0;font-size:14px;">Your outing request has been reviewed and rejected by the Warden</p>
+                  </div>
+                  <div style="padding:24px;">
+                    <table style="width:100%%;border-collapse:collapse;margin-bottom:20px;">
+                      <tr><td style="padding:10px 0;color:#6b7280;font-size:13px;border-bottom:1px solid #f3f4f6;">Student</td><td style="padding:10px 0;font-weight:600;font-size:13px;text-align:right;border-bottom:1px solid #f3f4f6;">%s (%s)</td></tr>
+                      <tr><td style="padding:10px 0;color:#6b7280;font-size:13px;border-bottom:1px solid #f3f4f6;">Destination</td><td style="padding:10px 0;font-weight:600;font-size:13px;text-align:right;border-bottom:1px solid #f3f4f6;">%s</td></tr>
+                      <tr><td style="padding:10px 0;color:#6b7280;font-size:13px;border-bottom:1px solid #f3f4f6;">Requested Out</td><td style="padding:10px 0;font-weight:600;font-size:13px;text-align:right;border-bottom:1px solid #f3f4f6;">%s</td></tr>
+                      <tr><td style="padding:10px 0;color:#6b7280;font-size:13px;">Requested Return</td><td style="padding:10px 0;font-weight:600;font-size:13px;text-align:right;">%s</td></tr>
+                    </table>
+                    <div style="text-align:center;padding:20px;background:#fef2f2;border-radius:12px;border:1px solid #fecaca;">
+                      <p style="margin:0 0 8px;font-weight:700;color:#991b1b;font-size:14px;">Warden's Remark</p>
+                      <p style="margin:0;color:#dc2626;font-size:13px;line-height:1.6;">%s</p>
+                    </div>
+                    <div style="margin-top:20px;padding:14px;background:#f0f9ff;border-radius:10px;border:1px solid #bae6fd;">
+                      <p style="margin:0;font-size:12px;color:#0369a1;">💡 <strong>What to do next?</strong> If you believe this was an error or need further assistance, please contact the Hostel Administration office directly.</p>
+                    </div>
+                  </div>
+                  <div style="padding:16px 24px;background:#f9fafb;text-align:center;border-top:1px solid #e5e7eb;">
+                    <p style="margin:0;font-size:11px;color:#9ca3af;">Smart Outing System — Hostel Management</p>
+                  </div>
+                </div>
+                """.formatted(
+                    outing.getStudentName(), outing.getStudentId(),
+                    outing.getDestination(),
+                    outDate, returnDate,
+                    outing.getWardenComment() != null ? outing.getWardenComment() : "No reason specified"
+            );
+
+            helper.setText(html, true);
+            javaMailSender.send(mimeMessage);
+            System.out.println("\u2705 Rejection email sent to student: " + outing.getStudentEmail());
+
+        } catch (Exception e) {
+            System.err.println("\u274C Failed to send rejection email: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }
