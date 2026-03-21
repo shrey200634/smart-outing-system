@@ -2,41 +2,47 @@ package com.smartouting.api_gateway.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.web.server.WebFilter;
-import reactor.core.publisher.Mono;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class CorsConfig {
 
     @Bean
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    public WebFilter corsFilter() {
-        return (exchange, chain) -> {
-            ServerHttpRequest request = exchange.getRequest();
-            ServerHttpResponse response = exchange.getResponse();
+    public CorsWebFilter corsWebFilter() {
+        CorsConfiguration corsConfig = new CorsConfiguration();
 
-            String origin = request.getHeaders().getOrigin();
-            if (origin != null) {
-                response.getHeaders().set("Access-Control-Allow-Origin", origin);
-                response.getHeaders().set("Access-Control-Allow-Credentials", "true");
-                response.getHeaders().set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-                response.getHeaders().set("Access-Control-Allow-Headers", "*");
-                response.getHeaders().set("Access-Control-Expose-Headers", "Authorization");
-                response.getHeaders().set("Access-Control-Max-Age", "3600");
-            }
+        // Allow frontend dev server (Vite default port)
+        corsConfig.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:3000"
+        ));
 
-            if (request.getMethod() == HttpMethod.OPTIONS) {
-                response.setStatusCode(HttpStatus.OK);
-                return Mono.empty();
-            }
+        corsConfig.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+        ));
 
-            return chain.filter(exchange);
-        };
+        corsConfig.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Origin",
+                "X-Requested-With"
+        ));
+
+        corsConfig.setExposedHeaders(List.of("Authorization"));
+        corsConfig.setAllowCredentials(true);
+        corsConfig.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfig);
+
+        return new CorsWebFilter(source);
     }
 }
