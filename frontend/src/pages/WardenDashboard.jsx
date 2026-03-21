@@ -12,12 +12,18 @@ const STATUS_MAP = {
 };
 
 const AI_FLAGS = {
-  MEDICAL_EMERGENCY:{color:"#fff",bg:"#E74C3C",label:"Emergency"},
-  URGENT:{color:"#fff",bg:"#F39C12",label:"Urgent"},
-  ROUTINE:{color:"#fff",bg:"#00B894",label:"Routine"},
+  MEDICAL_EMERGENCY:{color:"#fff",bg:"#C0392B",label:"Medical Emergency"},
+  MEDICAL:{color:"#fff",bg:"#E74C3C",label:"Medical"},
+  HEALTH:{color:"#fff",bg:"#E67E22",label:"Health"},
+  FAMILY_EMERGENCY:{color:"#fff",bg:"#8E44AD",label:"Family Emergency"},
+  FAMILY:{color:"#fff",bg:"#9B59B6",label:"Family"},
+  ACADEMIC_PRIORITY:{color:"#fff",bg:"#2980B9",label:"Academic Priority"},
+  ACADEMIC:{color:"#fff",bg:"#3498DB",label:"Academic"},
+  PERSONAL_LEISURE:{color:"#fff",bg:"#1ABC9C",label:"Personal"},
   SUSPICIOUS:{color:"#fff",bg:"#6C5CE7",label:"Suspicious"},
+  INSUFFICIENT_INFO:{color:"#fff",bg:"#95A5A6",label:"Insufficient Info"},
+  UNCATEGORIZED:{color:"#fff",bg:"#7F8C8D",label:"Uncategorized"},
 };
-
 function Badge({status}) { const s=STATUS_MAP[status]||STATUS_MAP.PENDING; return <span style={{padding:"3px 10px",borderRadius:99,fontSize:10,fontWeight:700,background:s.bg,color:s.color,border:`1px solid ${s.border}`}}>{status}</span>; }
 function AiChip({flag,score}) { if(!flag)return null; const i=AI_FLAGS[flag]||{color:"#fff",bg:"#8A8A8A",label:flag}; return <span style={{padding:"4px 12px",borderRadius:99,fontSize:10,fontWeight:700,background:i.bg,color:i.color,letterSpacing:"0.3px",boxShadow:`0 2px 8px ${i.bg}40`}}>{i.label} &middot; {score}</span>; }
 function formatDT(dt) { if(!dt)return"\u2014"; return new Date(dt).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"}); }

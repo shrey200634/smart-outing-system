@@ -17,10 +17,17 @@ function StatusBadge({ status }) {
 }
 
 const AI_FLAG_STYLES = {
-  MEDICAL_EMERGENCY:{bg:"#E74C3C",label:"Emergency"},
-  URGENT:{bg:"#F39C12",label:"Urgent"},
-  ROUTINE:{bg:"#00B894",label:"Routine"},
+  MEDICAL_EMERGENCY:{bg:"#C0392B",label:"Medical Emergency"},
+  MEDICAL:{bg:"#E74C3C",label:"Medical"},
+  HEALTH:{bg:"#E67E22",label:"Health"},
+  FAMILY_EMERGENCY:{bg:"#8E44AD",label:"Family Emergency"},
+  FAMILY:{bg:"#9B59B6",label:"Family"},
+  ACADEMIC_PRIORITY:{bg:"#2980B9",label:"Academic Priority"},
+  ACADEMIC:{bg:"#3498DB",label:"Academic"},
+  PERSONAL_LEISURE:{bg:"#1ABC9C",label:"Personal"},
   SUSPICIOUS:{bg:"#6C5CE7",label:"Suspicious"},
+  INSUFFICIENT_INFO:{bg:"#95A5A6",label:"Insufficient Info"},
+  UNCATEGORIZED:{bg:"#7F8C8D",label:"Uncategorized"},
 };
 function AiFlagBadge({flag,score}) {
   if(!flag)return null;
